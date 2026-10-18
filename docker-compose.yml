@@ -1,0 +1,95 @@
+# Infrastructure plus the application services built so far (see README status).
+name: distributed-mean
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dmean}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmean}
+      POSTGRES_DB: ${POSTGRES_DB:-dmean}
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  rabbitmq:
+    image: rabbitmq:4.0-management
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-dmean}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-dmean}
+    ports:
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # management UI and HTTP API (used by the dashboard poller)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  # One-shot: applies migrations/NNN_*.sql in order, each exactly once.
+  migrate:
+    image: postgres:16
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PGHOST: postgres
+      PGUSER: ${POSTGRES_USER:-dmean}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-dmean}
+      PGDATABASE: ${POSTGRES_DB:-dmean}
+    volumes: ["./migrations:/migrations:ro"]
+    command: ["sh", "/migrations/apply.sh"]
+    restart: "no"
+
+  coordinator:
+    build: ./py
+    command: ["python", "-m", "dmean.coordinator"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      rabbitmq: { condition: service_healthy }
+    environment:
+      DATABASE_URL: &db postgresql://${POSTGRES_USER:-dmean}:${POSTGRES_PASSWORD:-dmean}@postgres:5432/${POSTGRES_DB:-dmean}
+      RABBIT_URL: &amqp amqp://${RABBITMQ_DEFAULT_USER:-dmean}:${RABBITMQ_DEFAULT_PASS:-dmean}@rabbitmq:5672/
+      K_LEAF: ${K_LEAF:-5}
+      K_MERGE: ${K_MERGE:-5}
+    restart: unless-stopped
+
+  # Runs W worker processes inside its container; W is set with PUT /workers.
+  supervisor:
+    build: ./py
+    command: ["python", "-m", "dmean.supervisor"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      rabbitmq: { condition: service_healthy }
+    environment:
+      DATABASE_URL: *db
+      RABBIT_URL: *amqp
+      STORAGE_ROOT: /data
+    volumes: ["./data:/data"]
+    stop_grace_period: 2m          # time for workers to drain on shutdown
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      rabbitmq: { condition: service_healthy }
+    environment:
+      DATABASE_URL: *db
+      STORAGE_ROOT: /data
+      RABBIT_ADMIN_URL: http://rabbitmq:15672
+      RABBIT_ADMIN_USER: ${RABBITMQ_DEFAULT_USER:-dmean}
+      RABBIT_ADMIN_PASS: ${RABBITMQ_DEFAULT_PASS:-dmean}
+    ports: ["3000:3000"]
+    volumes: ["./data:/data"]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+# Operand storage (files/, partials/, results/) is the ./data bind mount, shared
+# by the API and the workers, so tests on the host can write and read it too.

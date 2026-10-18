@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dmean"
+version = "0.1.0"
+description = "Coordinator, worker and supervisor for distributed-mean"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=1.26",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.4",
+    "psycopg[binary]>=3.2",
+    "aio-pika>=9.4",
+    "pika>=1.3",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "hypothesis>=6.100"]
+
+[tool.setuptools.packages.find]
+include = ["dmean*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

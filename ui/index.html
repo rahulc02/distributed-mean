@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Distributed mean</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Distributed mean</h1>
+    <p class="link-state" id="link-state" role="status">Connecting</p>
+  </header>
+
+  <main class="layout">
+    <div class="primary">
+      <section aria-labelledby="workers-h" class="block">
+        <div class="block-head">
+          <h2 id="workers-h">Workers</h2>
+          <form id="workers-form" class="inline-form">
+            <label for="w">Target</label>
+            <input id="w" name="count" type="number" min="0" max="64" step="1" required>
+            <button type="submit">Set workers</button>
+          </form>
+        </div>
+        <ol class="fleet" id="fleet" aria-label="Worker processes"></ol>
+        <p class="caption" id="fleet-caption"></p>
+      </section>
+
+      <section aria-labelledby="queue-h" class="block">
+        <h2 id="queue-h">Queue</h2>
+        <dl class="figures" id="queue"></dl>
+      </section>
+
+      <section aria-labelledby="jobs-h" class="block">
+        <div class="block-head">
+          <h2 id="jobs-h">Jobs</h2>
+          <form id="job-form" class="inline-form">
+            <label for="f">Files</label>
+            <input id="f" name="f" type="number" min="2" max="99999" value="100" required>
+            <label for="c">Values per file</label>
+            <input id="c" name="c" type="number" min="2" max="999999" value="1000" required>
+            <button type="submit">Start job</button>
+          </form>
+        </div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+        <div class="table-wrap">
+          <table class="jobs">
+            <thead>
+              <tr><th scope="col">Job</th><th scope="col">Size</th><th scope="col">Status</th>
+                  <th scope="col" class="progress-col">Progress</th><th scope="col">Result</th></tr>
+            </thead>
+            <tbody id="jobs"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <aside aria-labelledby="log-h" class="activity">
+      <h2 id="log-h">Activity</h2>
+      <ol class="log" id="log" aria-live="polite"></ol>
+    </aside>
+  </main>
+
+  <script src="app.js" type="module"></script>
+</body>
+</html>
