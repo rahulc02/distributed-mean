@@ -1,4 +1,4 @@
-import Piscina from 'piscina';
+import { Piscina } from 'piscina';
 import type { RangeTask } from './generateRange.js';
 
 export interface JobSpec {
