@@ -87,7 +87,7 @@ class FakeTx:
 
     async def fail_job(self, job_id, reason):
         row = self.s.jobs.get(job_id)
-        if row is None or row.job.status != "RUNNING":
+        if row is None or row.job.status not in ("GENERATING", "NEW", "RUNNING"):
             return False
         row.job = replace(row.job, status="FAILED")
         row.error = reason
