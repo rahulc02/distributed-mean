@@ -10,8 +10,8 @@ operand with count 1). Every task adds up to K operands into one, partials merge
 continuously as they appear, and the final task is simply the one whose counts
 reach F. There is no separate reducer.
 
-- Design doc: https://claude.ai/code/artifact/73666d2d-06b9-4eb8-b523-f540af637858
-- Implementation plan: https://claude.ai/code/artifact/a79089cb-c336-4516-8a6f-1ab5cfc62ef4
+The full design, including the alternatives considered and why each was
+rejected, is in [docs/design.pdf](docs/design.pdf).
 
 ## Quick start
 
@@ -106,6 +106,7 @@ make e2e            # needs `docker compose up -d --build`
 docker-compose.yml     the whole system
 migrations/            numbered SQL migrations and the runner that applies each once
 contracts/             operand byte format, message schema, cross-language fixtures
+docs/design.pdf        the design document
 api/                   TypeScript API, generator and dashboard backend
 ui/                    the dashboard (static HTML, CSS, JavaScript; no build step)
 py/dmean/common/       codec, messages, storage, topology, logging, seeded RNG
@@ -114,7 +115,7 @@ py/dmean/worker/       adders, executor, consumer loop
 py/dmean/supervisor/   pure reconcile + process table + loop
 ```
 
-## Not built (documented in the design doc)
+## Not built (documented in [the design doc](docs/design.pdf))
 
 - Retention: partials and inputs are not deleted when a job finishes.
 - The backup-task speculator for slow workers at the tail (off by default at K = 5).
