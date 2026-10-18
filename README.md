@@ -77,6 +77,8 @@ Every service reads its settings from environment variables (see
 | `K_LEAF` | 5 | files per leaf task; 5 matches "5 files at a time" |
 | `K_MERGE` | 5 | partials per merge task |
 | `MAX_WORKERS` | 32 | upper bound for `PUT /workers` |
+| `DRAIN_GRACE_S` | 120 | seconds a draining worker gets to finish its task before it is killed; also Compose's stop grace period for the supervisor |
+| `RABBITMQ_CONSUMER_TIMEOUT_MS` | 600000 | a worker holding a task longer than this (hung but connected) has its channel closed and the task redelivered |
 | `GEN_THREADS` | 4 | worker threads the API uses to generate files |
 | `GEN_RANGE_SIZE` | 100 | files per generation range |
 

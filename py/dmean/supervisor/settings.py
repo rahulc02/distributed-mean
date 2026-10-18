@@ -11,6 +11,6 @@ class SupervisorSettings(BaseSettings):
 
     database_url: str                                  # DATABASE_URL
     reconcile_interval_s: float = Field(2.0, gt=0)
-    drain_grace_s: float = Field(600.0, gt=0)          # longer than any normal task
+    drain_grace_s: float = Field(120.0, gt=0)          # DRAIN_GRACE_S: longer than any normal task
     startup_failure_window_s: float = Field(10.0, gt=0)
     log_level: str = "INFO"

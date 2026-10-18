@@ -1,5 +1,8 @@
 .PHONY: up down test test-py test-api integration e2e fixtures
 
+-include .env
+PG_URL = postgresql://dmean:dmean@localhost:$(or $(POSTGRES_HOST_PORT),5432)/dmean
+
 up:            ## build and start the whole stack
 	cp -n .env.example .env 2>/dev/null || true
 	docker compose up -d --build
@@ -19,7 +22,7 @@ fixtures:      ## regenerate the cross-language fixtures
 	cd api && npm run fixture
 
 integration:   ## needs: docker compose up -d postgres && docker compose run --rm migrate
-	cd py && DATABASE_URL=postgresql://dmean:dmean@localhost:5432/dmean pytest tests/integration -v
+	cd py && DATABASE_URL=$(PG_URL) pytest tests/integration -v
 
 e2e:           ## needs: make up
-	cd py && E2E=1 pytest tests/e2e -v
+	cd py && E2E=1 E2E_DATABASE_URL=$(PG_URL) pytest tests/e2e -v

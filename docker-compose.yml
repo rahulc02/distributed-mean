@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-dmean}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmean}
       POSTGRES_DB: ${POSTGRES_DB:-dmean}
-    ports: ["5432:5432"]
+    ports: ["${POSTGRES_HOST_PORT:-5432}:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -21,9 +21,11 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER:-dmean}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS:-dmean}
+      # A consumer that holds a message longer than this has its channel closed and the message redelivered.
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbit consumer_timeout ${RABBITMQ_CONSUMER_TIMEOUT_MS:-600000}
     ports:
-      - "5672:5672"     # AMQP
-      - "15672:15672"   # management UI and HTTP API (used by the dashboard poller)
+      - "${RABBITMQ_HOST_PORT:-5672}:5672"             # AMQP
+      - "${RABBITMQ_MGMT_HOST_PORT:-15672}:15672"      # management UI and HTTP API (used by the dashboard poller)
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 5s
@@ -68,8 +70,9 @@ services:
       DATABASE_URL: *db
       RABBIT_URL: *amqp
       STORAGE_ROOT: /data
+      DRAIN_GRACE_S: ${DRAIN_GRACE_S:-120}
     volumes: ["./data:/data"]
-    stop_grace_period: 2m          # time for workers to drain on shutdown
+    stop_grace_period: ${DRAIN_GRACE_S:-120}s   # time for workers to drain on shutdown
     restart: unless-stopped
 
   api:
