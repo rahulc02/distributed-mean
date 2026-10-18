@@ -9,10 +9,12 @@ read/write the ./data bind mount that the API and workers share.
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import subprocess
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -27,6 +29,7 @@ REPO = Path(__file__).resolve().parents[3]
 DATA = Path(os.environ.get("E2E_DATA_DIR", REPO / "data"))
 API = os.environ.get("E2E_API", "http://localhost:3000")
 DB = os.environ.get("E2E_DATABASE_URL", "postgresql://dmean:dmean@localhost:5432/dmean")
+RABBIT_ADMIN = os.environ.get("E2E_RABBIT_ADMIN", "http://dmean:dmean@localhost:15672")
 
 
 def http(method: str, path: str, body: dict | None = None) -> tuple[int, bytes]:
@@ -52,17 +55,33 @@ def db():
         yield conn
 
 
-@pytest.fixture(scope="session", autouse=True)
-def workers_running():
-    status, _ = http("PUT", "/workers", {"count": 4})
-    assert status == 202, "API not reachable on localhost:3000; is the stack up?"
-    deadline = time.monotonic() + 60
+def set_workers(count: int, timeout_s: float = 60) -> None:
+    """Set W and wait until exactly `count` workers run and none are still starting or draining."""
+    status, _ = http("PUT", "/workers", {"count": count})
+    assert status == 202, "API not reachable; is the stack up?"
+    deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
         _, body = http("GET", "/workers")
-        if json.loads(body)["running"] >= 4:
+        w = json.loads(body)
+        if w["running"] == count and w["starting"] == 0 and w["draining"] == 0:
             return
-        time.sleep(1)
-    pytest.fail("workers did not start within 60 s")
+        time.sleep(0.5)
+    pytest.fail(f"workers did not settle at {count} within {timeout_s} s")
+
+
+def queue_depth(name: str) -> int:
+    """Messages waiting in a RabbitMQ queue, from the management API."""
+    url = urllib.parse.urlsplit(RABBIT_ADMIN)
+    req = urllib.request.Request(f"{url.scheme}://{url.hostname}:{url.port}/api/queues/%2F/{name}")
+    token = base64.b64encode(f"{url.username}:{url.password}".encode()).decode()
+    req.add_header("Authorization", f"Basic {token}")
+    with urllib.request.urlopen(req, timeout=10) as res:
+        return json.loads(res.read()).get("messages_ready", 0)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def workers_running():
+    set_workers(4)
 
 
 def wait_for_status(db, job_id: str, status: str = "DONE", timeout_s: float = 300) -> dict:

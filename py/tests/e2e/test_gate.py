@@ -11,7 +11,7 @@ import numpy as np
 from dmean.common.operand import encode
 from dmean.common.rng import expected_mean
 
-from .conftest import DATA, compose, http, wait_for_status, wait_until_running
+from .conftest import DATA, compose, http, queue_depth, set_workers, wait_for_status, wait_until_running
 
 
 def read_result(job_id: str) -> np.ndarray:
@@ -61,30 +61,64 @@ def test_bad_input_is_rejected_with_400():
     assert status == 400 and b"invalid request" in body
 
 
+# About 1,500 tasks per job.
+FAULT_JOB = (6000, 500)
+
+
+def assert_still_running(db, job_id: str) -> None:
+    """The fault must land mid-job, or the test proves nothing."""
+    status = db.execute("SELECT status FROM jobs WHERE id = %s", (job_id,)).fetchone()[0]
+    assert status == "RUNNING", f"job was {status} when the fault landed; the test proved nothing"
+
+
 def test_killing_a_worker_mid_job_does_not_change_the_answer(db):
-    f, c = 1500, 2000
-    job_id = submit(f, c)
-    wait_until_running(db, job_id, min_tasks_done=5)
-    busy = db.execute("SELECT pid FROM workers WHERE status = 'RUNNING' AND busy LIMIT 1").fetchone()
-    assert busy, "no busy worker to kill"
-    compose("exec", "-T", "supervisor", "sh", "-c", f"kill -9 {busy[0]}")   # its task is redelivered
-    check_generated(db, job_id, f, c)
+    f, c = FAULT_JOB
+    # One worker makes the job long enough to catch mid-way, and with a backlog and
+    # prefetch 1 that worker always holds an unacked task when it is killed.
+    set_workers(1)
+    try:
+        job_id = submit(f, c)
+        wait_until_running(db, job_id, min_tasks_done=5)
+        pid = db.execute("SELECT pid FROM workers WHERE status = 'RUNNING'").fetchone()[0]
+        compose("exec", "-T", "supervisor", "sh", "-c", f"kill -9 {pid}")   # its task is redelivered
+        assert_still_running(db, job_id)
+        check_generated(db, job_id, f, c)
+    finally:
+        set_workers(4)
 
 
-def test_restarting_the_coordinator_mid_job_does_not_change_the_answer(db):
-    f, c = 1500, 2000
-    job_id = submit(f, c)
-    wait_until_running(db, job_id, min_tasks_done=20)
-    compose("restart", "coordinator")                                       # recovery scan on startup
-    check_generated(db, job_id, f, c)
+def test_a_coordinator_outage_mid_job_does_not_change_the_answer(db):
+    f, c = FAULT_JOB
+    set_workers(0)                                         # nothing progresses until the crash
+    try:
+        job_id = submit(f, c)
+        wait_until_running(db, job_id, min_tasks_done=0)
+        compose("kill", "coordinator")                     # SIGKILL: no graceful shutdown
+        try:
+            # Workers keep summing leaves while no coordinator runs; their
+            # completions must wait in the queue, not be lost.
+            set_workers(4)
+            deadline = time.monotonic() + 60
+            while queue_depth("completions") < 100:
+                assert time.monotonic() < deadline, "completions did not pile up while the coordinator was down"
+                time.sleep(0.5)
+            assert_still_running(db, job_id)               # only the coordinator finishes jobs
+        finally:
+            compose("start", "coordinator")                # recovery scan, then the backlog
+        check_generated(db, job_id, f, c)
+    finally:
+        set_workers(4)
 
 
 def test_changing_w_mid_job_does_not_change_the_answer(db):
-    f, c = 1500, 2000
-    job_id = submit(f, c)
-    wait_until_running(db, job_id, min_tasks_done=5)
-    http("PUT", "/workers", {"count": 1})
-    time.sleep(3)
-    http("PUT", "/workers", {"count": 6})
-    check_generated(db, job_id, f, c)
-    http("PUT", "/workers", {"count": 4})
+    f, c = FAULT_JOB
+    try:
+        job_id = submit(f, c)
+        wait_until_running(db, job_id, min_tasks_done=5)
+        http("PUT", "/workers", {"count": 1})
+        time.sleep(3)
+        assert_still_running(db, job_id)
+        http("PUT", "/workers", {"count": 6})
+        check_generated(db, job_id, f, c)
+    finally:
+        set_workers(4)
