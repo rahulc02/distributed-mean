@@ -1,8 +1,8 @@
 # Build context is the repository root (the image also serves ui/).
 FROM node:22-slim AS build
 WORKDIR /app/api
-COPY api/package.json ./
-RUN npm install
+COPY api/package.json api/package-lock.json ./
+RUN npm ci
 COPY api/tsconfig.json ./
 COPY api/src ./src
 COPY api/test ./test
