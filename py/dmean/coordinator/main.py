@@ -33,13 +33,16 @@ log = logging.getLogger("dmean.coordinator")
 
 async def become_leader(conn: psycopg.AsyncConnection, key: int) -> None:
     """Block until this process holds the advisory lock; the lock dies with the session."""
+    standby_logged = False
     while True:
         cur = await conn.execute("SELECT pg_try_advisory_lock(%s) AS ok", (key,))
         row = await cur.fetchone()
         if row and row["ok"]:
             log.info("became leader")
             return
-        log.info("standby: another coordinator is leader")
+        if not standby_logged:
+            log.info("standby: another coordinator is leader")
+            standby_logged = True
         await asyncio.sleep(2.0)
 
 

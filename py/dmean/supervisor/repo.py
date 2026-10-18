@@ -16,21 +16,17 @@ class SupervisorRepo:
     def __init__(self, conn: psycopg.Connection, host: str) -> None:
         self.conn = conn                               # autocommit=True
         self.host = host
-        self._woken = False
-        conn.add_notify_handler(self._on_notify)       # also catches notifies during other queries
-
-    def _on_notify(self, _notify: psycopg.Notify) -> None:
-        self._woken = True
 
     def listen(self) -> None:
         self.conn.execute("LISTEN desired_workers")
 
     def wait_for_change(self, timeout_s: float) -> None:
-        """Return when PUT /workers notifies us, or after timeout_s."""
-        if not self._woken:
-            for _ in self.conn.notifies(timeout=timeout_s, stop_after=1):
-                pass
-        self._woken = False
+        """Return when PUT /workers notifies us, or after timeout_s.
+
+        notifies() also yields notifications that arrived during other queries.
+        """
+        for _ in self.conn.notifies(timeout=timeout_s, stop_after=1):
+            pass
 
     def desired_workers(self) -> int:
         row = self.conn.execute("SELECT desired_workers FROM config").fetchone()

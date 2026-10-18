@@ -35,3 +35,5 @@ def setup_logging(service: str, level: str = "INFO") -> None:
     root = logging.getLogger()
     root.handlers[:] = [handler]
     root.setLevel(level)
+    for noisy in ("pika", "aio_pika", "aiormq"):           # log every connection step at INFO
+        logging.getLogger(noisy).setLevel(logging.WARNING)
