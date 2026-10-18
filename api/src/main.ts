@@ -39,7 +39,7 @@ await poller.start();
 const shutdown = async () => {
   poller.stop();
   server.close();
-  await generator.close();
+  await jobs.close();
   await db.end();
   process.exit(0);
 };

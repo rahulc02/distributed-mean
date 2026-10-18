@@ -17,6 +17,7 @@ export interface CreateJobInput {
  */
 export class JobService {
   private readonly running = new Set<string>();
+  private closing = false;
 
   constructor(
     private readonly jobs: JobRepo,
@@ -50,6 +51,12 @@ export class JobService {
     for (const job of await this.jobs.generating()) void this.runGeneration(job);
   }
 
+  /** Shutdown: interrupted generations stay GENERATING, so the next start resumes them. */
+  async close(): Promise<void> {
+    this.closing = true;
+    await this.generator.close();
+  }
+
   private async runGeneration(job: JobSpec): Promise<void> {
     if (this.running.has(job.id)) return;
     this.running.add(job.id);
@@ -60,6 +67,7 @@ export class JobService {
         await this.events.log('generator', job.id, 'generation finished; job queued');
       }
     } catch (err) {
+      if (this.closing) return;
       const reason = `generation failed: ${err instanceof Error ? err.message : String(err)}`;
       await this.jobs.markFailed(job.id, reason);
       await this.events.log('generator', job.id, reason);
