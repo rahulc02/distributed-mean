@@ -1,4 +1,4 @@
-.PHONY: up down test test-py test-api integration e2e fixtures
+.PHONY: up down test test-py test-api integration e2e fixtures docs
 
 -include .env
 PG_URL = postgresql://dmean:dmean@localhost:$(or $(POSTGRES_HOST_PORT),5432)/dmean
@@ -18,6 +18,9 @@ test-py:
 
 test-api:
 	cd api && npm test
+
+docs:          ## render docs/design.md to docs/design.pdf (needs markdown and Chrome)
+	python docs/render.py
 
 fixtures:      ## regenerate the cross-language fixtures
 	cd api && npm run fixture

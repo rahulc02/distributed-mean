@@ -81,6 +81,7 @@ Every service reads its settings from environment variables (see
 | `RABBITMQ_CONSUMER_TIMEOUT_MS` | 600000 | a worker holding a task longer than this (hung but connected) has its channel closed and the task redelivered |
 | `GEN_THREADS` | 4 | worker threads the API uses to generate files |
 | `GEN_RANGE_SIZE` | 100 | files per generation range |
+| `POSTGRES_HOST_PORT`, `RABBITMQ_HOST_PORT`, `RABBITMQ_MGMT_HOST_PORT` | 5432, 5672, 15672 | ports published on the host; change them if something else already listens there (the Makefile's test targets follow them) |
 
 Workers stream any number of operands with at most 5 buffers in memory, so
 raising `K_LEAF` (for example to 1000) cuts partial I/O and coordinator load by
@@ -92,13 +93,14 @@ orders of magnitude if the limit is about memory rather than files per task.
 | --- | --- | --- |
 | `py/tests/coordinator` | anywhere | grouping, planning and the service logic, plus a **pipeline simulator**: 300 randomized runs in which tasks and completions are reordered and duplicated, workers crash, and the coordinator crashes between commit and publish; every run must end with the exact mean and exactly L + M tasks |
 | `py/tests/worker`, `py/tests/supervisor` | anywhere | adders (memory bound, bit-identical reruns), executor, reconcile decisions, real process spawn/drain/kill |
-| `py/tests/test_*.py`, `api/test` | anywhere | both codecs and the seeded generator agree byte for byte through shared fixtures |
+| `py/tests/test_*.py`, `api/test` | anywhere | both codecs and the seeded generator agree byte for byte through shared fixtures; the API's dashboard hub and progress maths; a shutdown mid-generation leaves the job to be resumed rather than failed |
 | `py/tests/integration` | needs Postgres | the coordinator against the real schema; two coordinators racing to start one job |
-| `py/tests/e2e` | needs the stack | the F = 12 example returns [6.5, 65]; generated jobs match an independent computation; concurrent jobs; killing a worker, restarting the coordinator and changing W mid-job leave the answer unchanged |
+| `py/tests/e2e` | needs the stack | the F = 12 example returns [6.5, 65]; generated jobs match an independent computation; concurrent jobs; a worker SIGKILLed mid-task, a coordinator outage mid-job (completions pile up, then drain on restart) and changing W mid-job all leave the answer unchanged. Each fault test asserts the job was still running when the fault landed |
 
 ```bash
 make test           # unit tests (Python and TypeScript)
-make integration    # needs `docker compose up -d postgres` and migrations
+make integration    # needs `docker compose up -d postgres` and migrations, and no
+                    # coordinator running: the tests truncate tables and start jobs themselves
 make e2e            # needs `docker compose up -d --build`
 ```
 
@@ -108,7 +110,8 @@ make e2e            # needs `docker compose up -d --build`
 docker-compose.yml     the whole system
 migrations/            numbered SQL migrations and the runner that applies each once
 contracts/             operand byte format, message schema, cross-language fixtures
-docs/design.pdf        the design document
+docs/design.md         the design document (source)
+docs/design.pdf        the design document (rendered from design.md)
 api/                   TypeScript API, generator and dashboard backend
 ui/                    the dashboard (static HTML, CSS, JavaScript; no build step)
 py/dmean/common/       codec, messages, storage, topology, logging, seeded RNG
