@@ -19,7 +19,7 @@ test-py:
 test-api:
 	cd api && npm test
 
-docs:          ## render docs/design.md to docs/design.pdf (needs markdown and Chrome)
+docs:          ## render docs/design.md to docs/DistributedMean_DesignDoc.pdf (needs markdown and Chrome)
 	python docs/render.py
 
 fixtures:      ## regenerate the cross-language fixtures

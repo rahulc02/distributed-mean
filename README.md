@@ -11,7 +11,7 @@ continuously as they appear, and the final task is simply the one whose counts
 reach F. There is no separate reducer.
 
 The full design, including the alternatives considered and why each was
-rejected, is in [docs/design.pdf](docs/design.pdf).
+rejected, is in [docs/DistributedMean_DesignDoc.pdf](docs/DistributedMean_DesignDoc.pdf).
 
 ## Quick start
 
@@ -111,7 +111,7 @@ docker-compose.yml     the whole system
 migrations/            numbered SQL migrations and the runner that applies each once
 contracts/             operand byte format, message schema, cross-language fixtures
 docs/design.md         the design document (source)
-docs/design.pdf        the design document (rendered from design.md)
+docs/DistributedMean_DesignDoc.pdf  the design document (rendered from design.md)
 api/                   TypeScript API, generator and dashboard backend
 ui/                    the dashboard (static HTML, CSS, JavaScript; no build step)
 py/dmean/common/       codec, messages, storage, topology, logging, seeded RNG
@@ -120,7 +120,7 @@ py/dmean/worker/       adders, executor, consumer loop
 py/dmean/supervisor/   pure reconcile + process table + loop
 ```
 
-## Not built (documented in [the design doc](docs/design.pdf))
+## Not built (documented in [the design doc](docs/DistributedMean_DesignDoc.pdf))
 
 - Retention: partials and inputs are not deleted when a job finishes.
 - The backup-task speculator for slow workers at the tail (off by default at K = 5).

@@ -6,3 +6,7 @@ __pycache__/
 .pytest_cache/
 .env
 data/
+*Take Home_ Distributed Mean_ Rahul Chembakasseril.pdf
+*HANDOFF.md
+*DESIGN_HISTORY.md
+.DS_Store

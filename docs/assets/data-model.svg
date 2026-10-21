@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 930" font-family="-apple-system, 'Helvetica Neue', Arial, sans-serif">
+<style>
+  .en { font-size: 19px; font-weight: 700; fill: #1f2933; font-family: Menlo, monospace; }
+  .wr { font-size: 12px; fill: #52606d; text-anchor: end; }
+  .kb { font-size: 10px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+  .cn { font-size: 13.5px; fill: #1f2933; font-family: Menlo, monospace; }
+  .ty { font-size: 12px; fill: #7b8794; text-anchor: end; font-family: Menlo, monospace; }
+  .nt { font-size: 11.5px; fill: #616e7c; }
+  .ft { font-size: 11.5px; fill: #3e4c59; font-family: Menlo, monospace; }
+  .rl { stroke: #495057; stroke-width: 1.8; fill: none; }
+  .dl { stroke-dasharray: 5 5; }
+  .c  { font-size: 13px; fill: #343a40; paint-order: stroke; stroke: #ffffff; stroke-width: 5px; stroke-linejoin: round; }
+  .zl { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; }
+</style>
+<rect width="1440" height="930" fill="#ffffff"/>
+<text x="30" y="34" font-size="24" font-weight="700" fill="#1f2933">Data model</text>
+<text x="30" y="58" font-size="14" fill="#52606d">Postgres records what exists, what is done and what is waiting; object storage holds only bytes. Input files and leaf tasks have no rows: both are implied by F.</text>
+<rect x="15" y="78" width="1410" height="510" rx="14" fill="#fbfcfd" stroke="#e4e7eb"/>
+<text x="32" y="102" class="zl" fill="#2b8a52">PER JOB</text>
+<rect x="15" y="604" width="1410" height="270" rx="14" fill="#fbfcfd" stroke="#e4e7eb" stroke-dasharray="6 5"/>
+<text x="32" y="628" class="zl" fill="#616e7c">CONTROL PLANE &#183; NOT PER JOB</text>
+<rect x="30" y="118" width="380" height="406" rx="10" fill="#ffffff" stroke="#2f9e5b" stroke-width="1.8"/>
+<path d="M30,128 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#e3f4ea" stroke="#2f9e5b" stroke-width="1.8"/>
+<text x="44" y="148" class="en">jobs</text>
+<text x="396" y="147" class="wr">written by API + coordinator</text>
+<rect x="40" y="171" width="24" height="16" rx="4" fill="#b7791f"/>
+<text x="52.0" y="183" class="kb">PK</text>
+<text x="92" y="181" class="cn">id</text>
+<text x="398" y="181" class="ty">uuid</text>
+<text x="92" y="195" class="nt">job id; prefixes every key</text>
+<line x1="31" y1="200" x2="409" y2="200" stroke="#edf0f2"/>
+<text x="92" y="217" class="cn">f &#183; c</text>
+<text x="398" y="217" class="ty">int</text>
+<text x="92" y="231" class="nt">files, values per file</text>
+<line x1="31" y1="236" x2="409" y2="236" stroke="#edf0f2"/>
+<text x="92" y="253" class="cn">seed</text>
+<text x="398" y="253" class="ty">bigint</text>
+<text x="92" y="267" class="nt">generation seed: hash(seed, i) per file</text>
+<line x1="31" y1="272" x2="409" y2="272" stroke="#edf0f2"/>
+<text x="92" y="289" class="cn">status</text>
+<text x="398" y="289" class="ty">text</text>
+<text x="92" y="303" class="nt">GENERATING &#8594; NEW &#8594; RUNNING &#8594; DONE | FAILED</text>
+<line x1="31" y1="308" x2="409" y2="308" stroke="#edf0f2"/>
+<text x="92" y="325" class="cn">k_leaf &#183; k_merge</text>
+<text x="398" y="325" class="ty">int</text>
+<text x="92" y="339" class="nt">fan-in, fixed when the job starts</text>
+<line x1="31" y1="344" x2="409" y2="344" stroke="#edf0f2"/>
+<text x="92" y="361" class="cn">leaves_published</text>
+<text x="398" y="361" class="ty">bool</text>
+<text x="92" y="375" class="nt">false = republish leaves on recovery</text>
+<line x1="31" y1="380" x2="409" y2="380" stroke="#edf0f2"/>
+<text x="92" y="397" class="cn">total_tasks &#183; tasks_done</text>
+<text x="398" y="397" class="ty">int</text>
+<text x="92" y="411" class="nt">progress, display only</text>
+<line x1="31" y1="416" x2="409" y2="416" stroke="#edf0f2"/>
+<text x="92" y="433" class="cn">total_operands &#183; operands_done</text>
+<text x="398" y="433" class="ty">bigint</text>
+<text x="92" y="447" class="nt">progress bar, display only</text>
+<line x1="31" y1="452" x2="409" y2="452" stroke="#edf0f2"/>
+<text x="92" y="469" class="cn">result_key &#183; error</text>
+<text x="398" y="469" class="ty">text</text>
+<text x="92" y="483" class="nt">results/J.csv, or why it failed</text>
+<line x1="31" y1="488" x2="409" y2="488" stroke="#edf0f2"/>
+<text x="92" y="505" class="cn">created_at &#8230; finished_at</text>
+<text x="398" y="505" class="ty">tstz</text>
+<text x="92" y="519" class="nt">created, generated, started, finished</text>
+<rect x="520" y="118" width="380" height="406" rx="10" fill="#ffffff" stroke="#2b6cd6" stroke-width="1.8"/>
+<path d="M520,128 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#e7f0fd" stroke="#2b6cd6" stroke-width="1.8"/>
+<text x="534" y="148" class="en">tasks</text>
+<text x="886" y="147" class="wr">written by coordinator</text>
+<rect x="530" y="171" width="24" height="16" rx="4" fill="#b7791f"/>
+<text x="542.0" y="183" class="kb">PK</text>
+<text x="582" y="181" class="cn">id</text>
+<text x="888" y="181" class="ty">text</text>
+<text x="582" y="195" class="nt">leaf &#x27;J:1:g&#x27; (deterministic) or merge id</text>
+<line x1="521" y1="200" x2="899" y2="200" stroke="#edf0f2"/>
+<rect x="530" y="207" width="24" height="16" rx="4" fill="#2b6cd6"/>
+<text x="542.0" y="219" class="kb">FK</text>
+<text x="582" y="217" class="cn">job_id</text>
+<text x="888" y="217" class="ty">uuid</text>
+<text x="582" y="231" class="nt">&#8594; jobs.id</text>
+<line x1="521" y1="236" x2="899" y2="236" stroke="#edf0f2"/>
+<text x="582" y="253" class="cn">level</text>
+<text x="888" y="253" class="ty">int</text>
+<text x="582" y="267" class="nt">1 = sums files, 2+ = sums partials</text>
+<line x1="521" y1="272" x2="899" y2="272" stroke="#edf0f2"/>
+<text x="582" y="289" class="cn">inputs</text>
+<text x="888" y="289" class="ty">jsonb</text>
+<text x="582" y="303" class="nt">merges: [{id, key, count}], fixed forever</text>
+<line x1="521" y1="308" x2="899" y2="308" stroke="#edf0f2"/>
+<text x="582" y="325" class="cn">input_count &#183; final</text>
+<text x="888" y="325" class="ty">int &#183; bool</text>
+<text x="582" y="339" class="nt">final when input counts sum to F</text>
+<line x1="521" y1="344" x2="899" y2="344" stroke="#edf0f2"/>
+<text x="582" y="361" class="cn">output_key</text>
+<text x="888" y="361" class="ty">text</text>
+<text x="582" y="375" class="nt">partials/J/{id} or results/J.csv</text>
+<line x1="521" y1="380" x2="899" y2="380" stroke="#edf0f2"/>
+<text x="582" y="397" class="cn">status</text>
+<text x="888" y="397" class="ty">text</text>
+<text x="582" y="411" class="nt">PENDING &#8594; DONE | FAILED</text>
+<line x1="521" y1="416" x2="899" y2="416" stroke="#edf0f2"/>
+<text x="582" y="433" class="cn">published_at</text>
+<text x="888" y="433" class="ty">tstz</text>
+<text x="582" y="447" class="nt">NULL = committed, not yet queued</text>
+<line x1="521" y1="452" x2="899" y2="452" stroke="#edf0f2"/>
+<text x="582" y="469" class="cn">worker_id &#183; duration_ms</text>
+<text x="888" y="469" class="ty">text &#183; int</text>
+<text x="582" y="483" class="nt">reported by the completion</text>
+<line x1="521" y1="488" x2="899" y2="488" stroke="#edf0f2"/>
+<text x="582" y="505" class="cn">created_at &#183; completed_at</text>
+<text x="888" y="505" class="ty">tstz</text>
+<text x="582" y="519" class="nt"></text>
+<rect x="1010" y="118" width="380" height="388" rx="10" fill="#ffffff" stroke="#2b6cd6" stroke-width="1.8"/>
+<path d="M1010,128 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#e7f0fd" stroke="#2b6cd6" stroke-width="1.8"/>
+<text x="1024" y="148" class="en">operands</text>
+<text x="1376" y="147" class="wr">written by coordinator</text>
+<rect x="1020" y="171" width="44" height="16" rx="4" fill="#7048e8"/>
+<text x="1042.0" y="183" class="kb">PK FK</text>
+<text x="1072" y="181" class="cn">id</text>
+<text x="1378" y="181" class="ty">text</text>
+<text x="1072" y="195" class="nt">= the producing task&#x27;s id</text>
+<line x1="1011" y1="200" x2="1389" y2="200" stroke="#edf0f2"/>
+<text x="1072" y="217" class="cn">job_id</text>
+<text x="1378" y="217" class="ty">uuid</text>
+<text x="1072" y="231" class="nt">copied from its task, so ready_pool needs no join</text>
+<line x1="1011" y1="236" x2="1389" y2="236" stroke="#edf0f2"/>
+<text x="1072" y="253" class="cn">key</text>
+<text x="1378" y="253" class="ty">text</text>
+<text x="1072" y="267" class="nt">partials/J/{id}</text>
+<line x1="1011" y1="272" x2="1389" y2="272" stroke="#edf0f2"/>
+<text x="1072" y="289" class="cn">count</text>
+<text x="1378" y="289" class="ty">int</text>
+<text x="1072" y="303" class="nt">files covered; never above F</text>
+<line x1="1011" y1="308" x2="1389" y2="308" stroke="#edf0f2"/>
+<text x="1072" y="325" class="cn">level</text>
+<text x="1378" y="325" class="ty">int</text>
+<text x="1072" y="339" class="nt">tree level; groups may mix levels</text>
+<line x1="1011" y1="344" x2="1389" y2="344" stroke="#edf0f2"/>
+<text x="1072" y="361" class="cn">status</text>
+<text x="1378" y="361" class="ty">text</text>
+<text x="1072" y="375" class="nt">READY &#8594; CONSUMED</text>
+<line x1="1011" y1="380" x2="1389" y2="380" stroke="#edf0f2"/>
+<rect x="1020" y="387" width="24" height="16" rx="4" fill="#2b6cd6"/>
+<text x="1032.0" y="399" class="kb">FK</text>
+<text x="1072" y="397" class="cn">consumed_by</text>
+<text x="1378" y="397" class="ty">text</text>
+<text x="1072" y="411" class="nt">&#8594; tasks.id of the merge that took it</text>
+<line x1="1011" y1="416" x2="1389" y2="416" stroke="#edf0f2"/>
+<text x="1024" y="438" class="ft">CHECK (status = &#x27;READY&#x27;) = (consumed_by IS NULL)</text>
+<text x="1024" y="457" class="ft">INDEX ready_pool (job_id, level DESC, id)</text>
+<text x="1024" y="476" class="ft">  WHERE status = &#x27;READY&#x27;</text>
+<text x="1024" y="495" class="ft">-- at most K_merge &#8722; 1 READY rows per job</text>
+<rect x="30" y="642" width="380" height="226" rx="10" fill="#ffffff" stroke="#868e96" stroke-width="1.8"/>
+<path d="M30,652 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#f1f3f5" stroke="#868e96" stroke-width="1.8"/>
+<text x="44" y="672" class="en">events</text>
+<text x="396" y="671" class="wr">written by every component</text>
+<rect x="40" y="695" width="24" height="16" rx="4" fill="#b7791f"/>
+<text x="52.0" y="707" class="kb">PK</text>
+<text x="92" y="705" class="cn">id</text>
+<text x="398" y="705" class="ty">bigserial</text>
+<text x="92" y="719" class="nt">the dashboard tails WHERE id &gt; last_seen</text>
+<line x1="31" y1="724" x2="409" y2="724" stroke="#edf0f2"/>
+<text x="92" y="741" class="cn">at</text>
+<text x="398" y="741" class="ty">tstz</text>
+<text x="92" y="755" class="nt"></text>
+<line x1="31" y1="760" x2="409" y2="760" stroke="#edf0f2"/>
+<text x="92" y="777" class="cn">source</text>
+<text x="398" y="777" class="ty">text</text>
+<text x="92" y="791" class="nt">api | generator | coordinator | supervisor</text>
+<line x1="31" y1="796" x2="409" y2="796" stroke="#edf0f2"/>
+<text x="92" y="813" class="cn">job_id</text>
+<text x="398" y="813" class="ty">uuid</text>
+<text x="92" y="827" class="nt">no FK, so the log outlives job cleanup</text>
+<line x1="31" y1="832" x2="409" y2="832" stroke="#edf0f2"/>
+<text x="92" y="849" class="cn">message</text>
+<text x="398" y="849" class="ty">text</text>
+<text x="92" y="863" class="nt">lifecycle moments only, not completions</text>
+<rect x="520" y="642" width="380" height="118" rx="10" fill="#ffffff" stroke="#e8890c" stroke-width="1.8"/>
+<path d="M520,652 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#fff1dc" stroke="#e8890c" stroke-width="1.8"/>
+<text x="534" y="672" class="en">config</text>
+<text x="886" y="671" class="wr">written by API</text>
+<rect x="530" y="695" width="24" height="16" rx="4" fill="#b7791f"/>
+<text x="542.0" y="707" class="kb">PK</text>
+<text x="582" y="705" class="cn">id</text>
+<text x="888" y="705" class="ty">bool</text>
+<text x="582" y="719" class="nt">always true: exactly one row</text>
+<line x1="521" y1="724" x2="899" y2="724" stroke="#edf0f2"/>
+<text x="582" y="741" class="cn">desired_workers</text>
+<text x="888" y="741" class="ty">int</text>
+<text x="582" y="755" class="nt">PUT /workers sets it, then NOTIFY</text>
+<text x="534" y="786" class="nt">The supervisor LISTENs and reconciles the workers table</text>
+<text x="534" y="804" class="nt">toward desired_workers. No foreign keys: desired state only.</text>
+<rect x="1010" y="642" width="380" height="226" rx="10" fill="#ffffff" stroke="#7048e8" stroke-width="1.8"/>
+<path d="M1010,652 a10,10 0 0 1 10,-10 h360 a10,10 0 0 1 10,10 v36 h-380 z" fill="#efe9fb" stroke="#7048e8" stroke-width="1.8"/>
+<text x="1024" y="672" class="en">workers</text>
+<text x="1376" y="671" class="wr">written by supervisor</text>
+<rect x="1020" y="695" width="24" height="16" rx="4" fill="#b7791f"/>
+<text x="1032.0" y="707" class="kb">PK</text>
+<text x="1072" y="705" class="cn">id</text>
+<text x="1378" y="705" class="ty">text</text>
+<text x="1072" y="719" class="nt">also the RabbitMQ consumer tag</text>
+<line x1="1011" y1="724" x2="1389" y2="724" stroke="#edf0f2"/>
+<text x="1072" y="741" class="cn">pid &#183; host</text>
+<text x="1378" y="741" class="ty">int &#183; text</text>
+<text x="1072" y="755" class="nt"></text>
+<line x1="1011" y1="760" x2="1389" y2="760" stroke="#edf0f2"/>
+<text x="1072" y="777" class="cn">status</text>
+<text x="1378" y="777" class="ty">text</text>
+<text x="1072" y="791" class="nt">STARTING &#8594; RUNNING &#8594; DRAINING &#8594; EXITED</text>
+<line x1="1011" y1="796" x2="1389" y2="796" stroke="#edf0f2"/>
+<text x="1072" y="813" class="cn">busy</text>
+<text x="1378" y="813" class="ty">bool</text>
+<text x="1072" y="827" class="nt">reported by the worker over a pipe</text>
+<line x1="1011" y1="832" x2="1389" y2="832" stroke="#edf0f2"/>
+<text x="1072" y="849" class="cn">started_at &#183; heartbeat_at</text>
+<text x="1378" y="849" class="ty">tstz</text>
+<text x="1072" y="863" class="nt">exited_at, exit_code once gone</text>
+<polyline points="410,182.0 465,182.0 465,218.0 520,218.0" class="rl"/>
+<line x1="420" y1="174.0" x2="420" y2="190.0" class="rl"/>
+<line x1="425" y1="174.0" x2="425" y2="190.0" class="rl"/>
+<line x1="504" y1="218.0" x2="520" y2="210.0" class="rl"/>
+<line x1="504" y1="218.0" x2="520" y2="218.0" class="rl"/>
+<line x1="504" y1="218.0" x2="520" y2="226.0" class="rl"/>
+<text x="465" y="170.0" class="c" text-anchor="middle">has many</text>
+<line x1="900" y1="182.0" x2="1010" y2="182.0" class="rl"/>
+<line x1="910" y1="174.0" x2="910" y2="190.0" class="rl"/>
+<line x1="915" y1="174.0" x2="915" y2="190.0" class="rl"/>
+<line x1="1000" y1="174.0" x2="1000" y2="190.0" class="rl"/>
+<circle cx="990" cy="182.0" r="4.5" fill="#ffffff" class="rl"/>
+<text x="955" y="170.0" class="c" text-anchor="middle">produces</text>
+<text x="955" y="208.0" class="c" text-anchor="middle">0 or 1</text>
+<polyline points="1390,398.0 1412,398.0 1412,96 720,96 720,118" class="rl"/>
+<line x1="1406" y1="398.0" x2="1390" y2="390.0" class="rl"/>
+<line x1="1406" y1="398.0" x2="1390" y2="398.0" class="rl"/>
+<line x1="1406" y1="398.0" x2="1390" y2="406.0" class="rl"/>
+<line x1="712" y1="108" x2="728" y2="108" class="rl"/>
+<line x1="712" y1="103" x2="728" y2="103" class="rl"/>
+<text x="1066" y="91" class="c" text-anchor="middle">consumed_by: a merge task consumes up to K_merge operands</text>
+<line x1="220" y1="642" x2="220" y2="524" class="rl dl"/>
+<text x="232" y="588.0" class="c" text-anchor="start">job_id, logical reference only</text>
+<g font-size="12.5" fill="#343a40">
+<text x="30" y="900">header = who writes it:</text>
+<rect x="180" y="888" width="16" height="16" rx="4" fill="#e3f4ea" stroke="#2f9e5b"/><text x="202" y="900">API + coordinator</text>
+<rect x="339" y="888" width="16" height="16" rx="4" fill="#e7f0fd" stroke="#2b6cd6"/><text x="361" y="900">coordinator</text>
+<rect x="456" y="888" width="16" height="16" rx="4" fill="#fff1dc" stroke="#e8890c"/><text x="478" y="900">API</text>
+<rect x="517" y="888" width="16" height="16" rx="4" fill="#efe9fb" stroke="#7048e8"/><text x="539" y="900">supervisor</text>
+<rect x="627" y="888" width="16" height="16" rx="4" fill="#f1f3f5" stroke="#868e96"/><text x="649" y="900">everyone</text>
+<line x1="733" y1="896" x2="763" y2="896" class="rl"/>
+<line x1="753" y1="888" x2="753" y2="904" class="rl"/><line x1="758" y1="888" x2="758" y2="904" class="rl"/>
+<text x="771" y="900">exactly one</text>
+<line x1="863" y1="896" x2="893" y2="896" class="rl"/>
+<line x1="877" y1="896" x2="893" y2="888" class="rl"/>
+<line x1="877" y1="896" x2="893" y2="896" class="rl"/>
+<line x1="877" y1="896" x2="893" y2="904" class="rl"/>
+<text x="901" y="900">many</text>
+<line x1="963" y1="896" x2="993" y2="896" class="rl"/><circle cx="979" cy="896" r="4.5" fill="#ffffff" class="rl"/><line x1="989" y1="888" x2="989" y2="904" class="rl"/>
+<text x="1001" y="900">zero or one</text>
+<line x1="1083" y1="896" x2="1113" y2="896" class="rl dl"/>
+<text x="1121" y="900">logical reference, no FK</text>
+</g>
+</svg>

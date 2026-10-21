@@ -1,4 +1,4 @@
-"""Render docs/design.md to docs/design.pdf with headless Chrome.
+"""Render docs/design.md to docs/DistributedMean_DesignDoc.pdf with headless Chrome.
 
     pip install markdown          # or: pip install -e "py[docs]"
     python docs/render.py         # CHROME=/path/to/chrome to override the browser
@@ -18,7 +18,7 @@ import markdown
 
 DOCS = Path(__file__).resolve().parent
 SOURCE = DOCS / "design.md"
-OUTPUT = DOCS / "design.pdf"
+OUTPUT = DOCS / "DistributedMean_DesignDoc.pdf"
 TITLE = "Distributed Vector Mean — Design"
 
 CHROME_CANDIDATES = [
@@ -50,6 +50,9 @@ tr { break-inside: avoid; }
 th { background: #f1efe9; font-weight: 500; color: #555; text-align: left; }
 th, td { border: 1px solid #e3e0d8; padding: 4pt 7pt; vertical-align: top; }
 img { max-width: 100%%; display: block; margin: 8pt auto; }
+@page wide { size: A4 landscape; margin: 12mm; }
+.figure-page { page: wide; break-before: page; break-after: page; }
+.figure-page img { width: 100%%; max-height: 180mm; object-fit: contain; margin: 0; }
 """
 
 
